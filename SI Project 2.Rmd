@@ -1,0 +1,67 @@
+---
+title: "SI Project 2"
+author: "Kun Qian"
+date: "Thursday, February 12, 2015"
+output: html_document
+---
+In the second portion of the project, we're going to analyze the ToothGrowth data in the R datasets package. 
+
+#### 1.Load the ToothGrowth data and perform some basic exploratory data analyses 
+```{r}
+library(datasets)
+data(ToothGrowth)
+```
+
+#### 2.Provide a basic summary of the data.
+```{r}
+head(ToothGrowth)
+dim(ToothGrowth)
+summary(ToothGrowth)
+```
+The data is set of 60 observations, length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1 and 2 mg) with each of two delivery methods (orange juice or ascorbic acid).
+
+As can be seen below, there is a clear positive correlation between the tooth length and the dose levels of Vitamin C, for both delivery methods.
+```{r}
+library(datasets)
+library(ggplot2)
+ggplot(data=ToothGrowth, aes(x=as.factor(dose), y=len, fill=supp)) +
+    geom_bar(stat="identity",) +
+    facet_grid(. ~ supp) +
+    xlab("Dose in miligrams") +
+    ylab("Tooth length") +
+    guides(fill=guide_legend(title="Supplement type"))
+```
+
+#### Confidence Intervals
+We first consider a test of average difference between group using VC and OJ. In order to do that, we use unequal variance t test
+```{r}
+t.test(len ~ supp, paired = F, var.equal = F, data = ToothGrowth)
+```
+As shown in the result, 0 is contained in the 95% confidence interval. Given p-value is 0.06 > 0.05, we cannot reject the null hypothesis that true difference in means is equal to 0
+
+Now we consider dose variable. First we seperate data into different groups:
+```{r}
+dose12 <- subset(ToothGrowth, dose %in% c(0.5, 1))
+dose23 <- subset(ToothGrowth, dose %in% c(1, 2))
+dose13 <- subset(ToothGrowth, dose %in% c(0.5, 2))
+```
+Then we perform unequal variance t test for each of the group:
+```{r}
+t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = dose12)
+t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = dose23)
+t.test(len ~ dose, paired = FALSE, var.equal = FALSE, data = dose13)
+```
+These results show either 2 groups have significant different means leading to the conclusion that using different dose cause different lens on average. 
+
+#### Regression approach
+We could also use simple linear regression to test the relationship between variables:
+```{r}
+fit <- lm(len ~ dose + supp, data=ToothGrowth)
+summary(fit)
+confint(fit)
+
+
+
+
+
+
